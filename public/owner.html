@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<title>Responsive Dashboard</title>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+<main class="h-dvh overflow-hidden">
+  <div class="flex h-full relative">
+
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-30 opacity-0 pointer-events-none lg:hidden transition-opacity duration-300"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" aria-label="Sidebar navigation"
+      class="fixed lg:static top-0 left-0 z-40 h-full w-[264px] min-w-[264px] max-w-[85vw] bg-white border-r border-slate-300 transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0">
+      <div class="h-full flex flex-col overflow-y-auto py-6 px-4">
+        <a href="#" class="mb-8 inline-block min-h-9 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+          <span class="sr-only">Your Company</span>
+          <img src="https://readymadeui.com/readymadeui.svg" alt="logo" class="w-36 block" />
+        </a>
+
+        <nav class="flex-1 space-y-1" aria-label="Primary">
+          <button type="button" aria-controls="sub-menu-0" aria-expanded="false"
+            class="collapsible-toggle flex items-center gap-2.5 w-full text-sm font-medium text-left text-slate-800 rounded-md px-3 py-2.5 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+            <span class="flex-1">Dashboard</span>
+            <svg class="arrow size-3 transition-transform duration-300 -rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
+          </button>
+          <ul id="sub-menu-0" style="max-height:0px" class="space-y-1 text-sm text-slate-600 font-medium pl-9 pr-3 overflow-hidden transition-all duration-300">
+            <li><a href="#" class="block rounded-md px-3 py-2 hover:text-slate-900 hover:bg-slate-100">Analytics</a></li>
+            <li><a href="#" class="block rounded-md px-3 py-2 hover:text-slate-900 hover:bg-slate-100">Logistics</a></li>
+            <li><a href="#" class="block rounded-md px-3 py-2 hover:text-slate-900 hover:bg-slate-100">Academy</a></li>
+          </ul>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col h-full min-w-0 overflow-y-auto">
+
+      <!-- Header -->
+      <header class="sticky top-0 z-20 w-full bg-white border-b border-slate-300 px-4 sm:px-6 min-h-[64px] flex items-center">
+        <div class="flex items-center gap-3 sm:gap-4 w-full">
+          <button type="button" id="toggleSidebar" aria-controls="sidebar" aria-expanded="false"
+            class="p-2 -ml-2 rounded hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            <span class="sr-only">Toggle sidebar menu</span>
+            <svg class="size-5 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          </button>
+
+          <h1 class="text-lg sm:text-xl text-slate-900 font-bold truncate">Dashboard</h1>
+
+          <div class="flex items-center gap-2 sm:gap-3 ml-auto">
+            <!-- Search -->
+            <div class="relative" id="searchWrapper">
+              <form role="search" id="searchBox"
+                class="max-lg:hidden max-lg:absolute max-lg:right-0 max-lg:top-full max-lg:mt-2 max-lg:w-[calc(100vw-2rem)] max-lg:max-w-xs max-lg:shadow-lg max-lg:z-50 flex items-center gap-2.5 px-3 py-2 lg:w-64 xl:w-96 rounded-md bg-white border border-slate-300 focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600 transition-all">
+                <svg class="size-4 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input type="search" placeholder="Search..." class="text-base sm:text-sm text-slate-900 w-full outline-none bg-transparent placeholder:text-slate-400" />
+              </form>
+              <button id="searchToggle" type="button" aria-label="Toggle search"
+                class="lg:hidden p-2 rounded-md hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <svg class="size-5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              </button>
+            </div>
+
+            <!-- Profile -->
+            <div class="relative">
+              <button type="button" id="dropdown-toggle" aria-haspopup="true" aria-expanded="false" aria-controls="dropdown-menu"
+                class="block border border-slate-300 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <img src="https://readymadeui.com/team-1.webp" alt="profile-pic" class="size-9 rounded-full object-cover" />
+              </button>
+              <ul id="dropdown-menu" aria-labelledby="dropdown-toggle"
+                class="hidden absolute right-0 top-full mt-2 p-1.5 space-y-0.5 w-52 max-w-[calc(100vw-2rem)] text-slate-800 text-sm font-medium bg-white border border-slate-300 rounded-md shadow-lg z-30">
+                <li><a href="#" class="dropdown-item flex items-center gap-2.5 p-2.5 rounded-md hover:bg-slate-100">My Profile</a></li>
+                <li><a href="#" class="dropdown-item flex items-center gap-2.5 p-2.5 rounded-md hover:bg-slate-100">Account Settings</a></li>
+                <li><a href="#" class="dropdown-item flex items-center gap-2.5 p-2.5 rounded-md hover:bg-slate-100">Billing &amp; Payments</a></li>
+                <li class="border-t border-slate-200 pt-1"><a href="#" class="dropdown-item flex items-center gap-2.5 p-2.5 rounded-md text-red-600 hover:bg-red-50">Logout</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="w-full max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8 flex-1">
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h2 class="text-base sm:text-lg font-semibold text-slate-900">Members</h2>
+          <button type="button" id="addMemberBtn" aria-controls="member-panel" aria-expanded="false"
+            class="w-full sm:w-auto py-2.5 px-4 text-sm rounded-md font-semibold tracking-wide text-white border border-blue-600 bg-blue-600 hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+            Add members
+          </button>
+          <button type="button" id="deleteMemberBtn" aria-controls="member-panel" aria-expanded="false"
+            class="w-full sm:w-auto py-2.5 px-4 text-sm rounded-md font-semibold tracking-wide text-white border border-red-600 bg-red-600 hover:bg-red-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+            Delete members
+          </button>
+        </div>
+
+        <!-- Hidden by default; opens on "Add members" -->
+        <section id="member-panel" class="hidden mb-6">
+          <form id="memberForm" novalidate
+            class="relative w-full max-w-md mx-auto md:mx-0 bg-white p-5 sm:p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
+            <button type="button" id="closePanel" aria-label="Close form"
+              class="absolute top-3 right-3 size-8 grid place-items-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">&times;</button>
+            <h3 class="text-base font-semibold text-slate-900 pr-8">Create an account</h3>
+
+            <div>
+              <label for="name" class="mb-1.5 inline-block text-sm font-medium text-slate-900">Name</label>
+              <input type="text" id="name" name="name" placeholder="Enter the name" autocomplete="name"
+                class="w-full px-3 py-2.5 text-base sm:text-sm rounded-md bg-white border border-slate-300 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+              <p id="m1" class="mt-1 text-xs text-red-500" role="alert"></p>
+            </div>
+            <div>
+              <label for="mobile" class="mb-1.5 inline-block text-sm font-medium text-slate-900">Mobile no</label>
+              <input type="tel" id="mobile" name="mobile" placeholder="Enter the mobile number" autocomplete="tel"
+                class="w-full px-3 py-2.5 text-base sm:text-sm rounded-md bg-white border border-slate-300 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+              <p id="m2" class="mt-1 text-xs text-red-500" role="alert"></p>
+            </div>
+            <div>
+              <label for="email" class="mb-1.5 inline-block text-sm font-medium text-slate-900">Email</label>
+              <input type="email" id="email" name="email" placeholder="Enter the email" autocomplete="email"
+                class="w-full px-3 py-2.5 text-base sm:text-sm rounded-md bg-white border border-slate-300 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600" />
+              <p id="m3" class="mt-1 text-xs text-red-500" role="alert"></p>
+            </div>
+
+            <button type="submit" id="subscribeBtn"
+              class="w-full py-2.5 px-4 text-sm rounded-md font-semibold tracking-wide text-white border border-blue-600 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+              Create an account
+            </button>
+          </form>
+        </section>
+
+        <!-- Members table (table on md+, stacked cards on mobile) -->
+        <section aria-label="Members list">
+          <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <table class="w-full text-sm text-left">
+              <thead class="hidden md:table-header-group bg-slate-100 text-slate-700">
+                <tr>
+                  <th class="px-4 py-3 font-semibold">Name</th>
+                  <th class="px-4 py-3 font-semibold">Email</th>
+                  <th class="px-4 py-3 font-semibold">Mobile</th>
+                  <th class="px-4 py-3 font-semibold">Notifications</th>
+                </tr>
+              </thead>
+              <tbody id="membersBody" class="block md:table-row-group">
+                <tr class="block md:table-row">
+                  <td colspan="4" class="block md:table-cell px-4 py-6 text-center text-slate-500">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ---------- Members table ---------- */
+function loadMembers() {
+  const body = document.getElementById("membersBody");
+
+  const messageRow = (text, cls) => {
+    body.innerHTML = "";
+    const tr = document.createElement("tr");
+    tr.className = "block md:table-row";
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.className = "block md:table-cell px-4 py-6 text-center " + cls;
+    td.textContent = text;
+    tr.appendChild(td);
+    body.appendChild(tr);
+  };
+
+  const cell = (label, value) => {
+    const td = document.createElement("td");
+    td.dataset.label = label;
+    td.className =
+      "flex justify-between items-center gap-4 px-4 py-2 md:table-cell md:py-3 " +
+      "text-right md:text-left break-all md:break-normal " +
+      "before:content-[attr(data-label)] before:font-semibold before:text-slate-500 before:text-left before:shrink-0 md:before:hidden";
+    if (value instanceof Node) td.appendChild(value);
+    else td.textContent = value || "-";
+    return td;
+  };
+
+  const badge = (on) => {
+    const s = document.createElement("span");
+    s.textContent = on ? "Enabled" : "Not enabled";
+    s.className =
+      "inline-block px-2 py-0.5 rounded-full text-xs font-medium " +
+      (on ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600");
+    return s;
+  };
+
+  fetch("/show_subscriptions")
+    .then((res) => res.json())
+    .then((data) => {
+      const owners = Object.values(data.owners || {});
+      if (!owners.length) return messageRow("No members yet", "text-slate-500");
+
+      body.innerHTML = "";
+      owners.forEach((owner) => {
+        const tr = document.createElement("tr");
+        tr.className =
+          "block md:table-row border-b border-slate-200 last:border-b-0 py-2 md:py-0 hover:bg-slate-50";
+        tr.append(
+          cell("Name", owner.name),
+          cell("Email", owner.email),
+          cell("Mobile", owner.mobile),
+          cell("Notifications", badge(!!owner.notificationSubscription))
+        );
+        body.appendChild(tr);
+      });
+    })
+    .catch((error) => {
+      console.error(error);
+      messageRow("Could not load members", "text-red-500");
+    });
+}
+loadMembers();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = (id) => document.getElementById(id);
+  const isDesktop = () => window.innerWidth >= 1024;
+
+  /* ---------- Sidebar ---------- */
+  const toggleBtn = $("toggleSidebar"), sidebar = $("sidebar"), overlay = $("sidebar-overlay");
+
+  function setOverlay(show) {
+    overlay.classList.toggle("opacity-0", !show);
+    overlay.classList.toggle("pointer-events-none", !show);
+  }
+  function openSidebar() {
+    toggleBtn.setAttribute("aria-expanded", "true");
+    if (isDesktop()) sidebar.classList.remove("lg:-ml-[264px]");
+    else { sidebar.classList.remove("-translate-x-full"); setOverlay(true); }
+  }
+  function closeSidebar() {
+    toggleBtn.setAttribute("aria-expanded", "false");
+    if (isDesktop()) sidebar.classList.add("lg:-ml-[264px]");
+    else { sidebar.classList.add("-translate-x-full"); setOverlay(false); }
+  }
+  toggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleBtn.getAttribute("aria-expanded") === "true" ? closeSidebar() : openSidebar();
+  });
+  overlay.addEventListener("click", closeSidebar);
+  toggleBtn.setAttribute("aria-expanded", isDesktop() ? "true" : "false");
+
+  let wasDesktop = isDesktop();
+  window.addEventListener("resize", () => {
+    if (isDesktop() === wasDesktop) return;
+    wasDesktop = isDesktop();
+    setOverlay(false);
+    sidebar.classList.remove("lg:-ml-[264px]");
+    sidebar.classList.add("-translate-x-full");
+    toggleBtn.setAttribute("aria-expanded", wasDesktop ? "true" : "false");
+  });
+
+  /* ---------- Search (mobile toggle) ---------- */
+  const searchBox = $("searchBox"), searchWrapper = $("searchWrapper");
+  $("searchToggle").addEventListener("click", (e) => {
+    e.stopPropagation();
+    searchBox.classList.toggle("max-lg:hidden");
+    if (!searchBox.classList.contains("max-lg:hidden")) searchBox.querySelector("input").focus();
+  });
+  const resetSearch = () => searchBox.classList.add("max-lg:hidden");
+  document.addEventListener("click", (e) => { if (!searchWrapper.contains(e.target)) resetSearch(); });
+
+  /* ---------- Profile dropdown ---------- */
+  const profileToggle = $("dropdown-toggle"), profileMenu = $("dropdown-menu");
+  const setMenu = (open) => {
+    profileMenu.classList.toggle("hidden", !open);
+    profileToggle.setAttribute("aria-expanded", String(open));
+  };
+  profileToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setMenu(profileToggle.getAttribute("aria-expanded") !== "true");
+  });
+  document.addEventListener("click", (e) => { if (!profileMenu.contains(e.target)) setMenu(false); });
+  profileMenu.querySelectorAll(".dropdown-item").forEach((l) => l.addEventListener("click", () => setMenu(false)));
+
+  /* ---------- Collapsible submenu ---------- */
+  document.querySelectorAll(".collapsible-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const menu = btn.nextElementSibling, arrow = btn.querySelector(".arrow");
+      const open = menu.offsetHeight > 0;
+      menu.style.maxHeight = open ? "0px" : menu.scrollHeight + "px";
+      arrow.classList.toggle("-rotate-90", open);
+      btn.setAttribute("aria-expanded", String(!open));
+    });
+  });
+
+  /* ---------- Add members panel ---------- */
+  const panel = $("member-panel"), addBtn = $("addMemberBtn");
+  const nameInput = $("name"), mobileInput = $("mobile"), emailInput = $("email");
+  const msgs = [$("m1"), $("m2"), $("m3")];
+  const subscribeBtn = $("subscribeBtn"), form = $("memberForm");
+
+  function openPanel() {
+    panel.classList.remove("hidden");
+    addBtn.setAttribute("aria-expanded", "true");
+    nameInput.focus();
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  function closePanel() {
+    panel.classList.add("hidden");
+    addBtn.setAttribute("aria-expanded", "false");
+    msgs.forEach((m) => (m.innerText = ""));
+  }
+  addBtn.addEventListener("click", openPanel);
+  $("closePanel").addEventListener("click", () => { closePanel(); addBtn.focus(); });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    setMenu(false); resetSearch();
+    if (!isDesktop() && toggleBtn.getAttribute("aria-expanded") === "true") closeSidebar();
+    else if (!panel.classList.contains("hidden")) closePanel();
+  });
+
+  /* ---------- Push notifications + create account ---------- */
+  async function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) throw new Error("Service workers are not supported in this browser.");
+    const reg = await navigator.serviceWorker.register("/service-worker.js");
+    await navigator.serviceWorker.ready;
+    return reg;
+  }
+  function urlBase64ToUint8Array(b64) {
+    const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+    const raw = window.atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  }
+  const postJSON = async (body) => {
+    const res = await fetch("/subscribe", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Request failed");
+    return data;
+  };
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    msgs.forEach((m) => (m.innerText = ""));
+
+    const nameValue = nameInput.value.trim();
+    const mobileValue = mobileInput.value.trim();
+    const emailValue = emailInput.value.trim();
+
+    if (!nameValue) { msgs[0].innerText = "Enter the name"; nameInput.focus(); return; }
+    if (!mobileValue) { msgs[1].innerText = "Enter the mobile"; mobileInput.focus(); return; }
+    if (!emailValue || !emailInput.checkValidity()) { msgs[2].innerText = "Enter a valid email"; emailInput.focus(); return; }
+
+    const ownerId = emailValue.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const ownerData = { ownerId, name: nameValue, mobile: mobileValue, email: emailValue };
+    subscribeBtn.disabled = true;
+    subscribeBtn.textContent = "Creating account...";
+
+    try {
+      await postJSON(ownerData);
+      let message = "Account created.";
+      try {
+        if (!window.isSecureContext || !("serviceWorker" in navigator) || !("PushManager" in window))
+          throw new Error("Push notifications require HTTPS or localhost.");
+        if ((await Notification.requestPermission()) !== "granted")
+          throw new Error("Notification permission denied.");
+
+        const registration = await registerServiceWorker();
+        const publicKey = "BFKtDIwBjMBUdIoEP5mgv14ak4M3DUSvmRbwLpapdCRorgUS7yx8DVUTxA0_iSVOcEQf_xQjljc3mgYTkuqPuRI";
+        const existing = await registration.pushManager.getSubscription();
+        if (existing) await existing.unsubscribe();
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        await postJSON({ ...ownerData, subscription: subscription.toJSON() });
+        message = "Account created and notifications enabled!";
+      } catch (err) {
+        console.error(err);
+        message = `Account created, but notifications could not be enabled: ${err.message}`;
+      }
+      alert(message);
+      form.reset();
+      closePanel();
+      loadMembers(); // refresh the table
+    } catch (err) {
+      console.error(err);
+      alert(`Could not create account: ${err.message}`);
+    } finally {
+      subscribeBtn.disabled = false;
+      subscribeBtn.textContent = "Create an account";
+    }
+  });
+});
+</script>
+</body>
+</html>
