@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const webpush = require("web-push");
 const { cert, initializeApp } = require("firebase-admin/app");
 const { getDatabase } = require("firebase-admin/database");
@@ -37,7 +37,7 @@ const serviceAccountPath =
         ? FIREBASE_SERVICE_ACCOUNT_PATH
         : path.resolve(__dirname, FIREBASE_SERVICE_ACCOUNT_PATH);
 
-serviceAccount = require(serviceAccountPath);
+const serviceAccount = require(serviceAccountPath);
 
 initializeApp({
     credential: cert(serviceAccount),
@@ -66,68 +66,39 @@ function isValidSubscription(subscription) {
 }
 
 app.post("/subscribe", async (req, res) => {
+    const { ownerId, name, mobile, email, subscription } = req.body;
 
-    const {
-        ownerId,
-        name,
-        mobile,
-        email,
-        subscription
-    } = req.body;
-
-
-    // Check required data
     if (!ownerId || !name || !mobile || !email) {
-
         return res.status(400).json({
-            message: "Owner information is required"
+            message: "Owner information is required",
         });
-
     }
 
-
-    // A push subscription is optional; account creation must work without it.
     if (subscription !== undefined && !isValidSubscription(subscription)) {
-
         return res.status(400).json({
-            message: "Invalid subscription object"
+            message: "Invalid subscription object",
         });
-
     }
-
 
     try {
-
         const ownerRef = database.ref(`owners/${ownerId}`);
-
         const snapshot = await ownerRef.once("value");
-
         const existingOwner = snapshot.val();
-
-
-        // ==========================================
-        // SAVE OWNER
-        // ==========================================
 
         const ownerData = {
             name,
             mobile,
             email,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
         };
 
         if (subscription) {
             ownerData.notificationSubscription = subscription;
         }
 
-
-        // Keep original creation time
         if (!existingOwner) {
-
             ownerData.createdAt = new Date().toISOString();
-
         }
-
 
         await ownerRef.update(ownerData);
 
@@ -136,85 +107,75 @@ app.post("/subscribe", async (req, res) => {
         }
 
         return res.status(201).json({
-
             message: "Owner account saved successfully",
-
-            ownerId: ownerId
-
+            ownerId,
         });
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Could not save owner:",
-            error.message
-        );
+    } catch (error) {
+        console.error("Could not save owner:", error.message);
 
         const credentialsRejected =
             /invalid_grant|invalid.jwt.signature|invalid-credential/i.test(error.message);
 
         return res.status(500).json({
-
             message: credentialsRejected
                 ? "Firebase rejected the server credentials. Check that the service-account key is active and matches the configured service account, and verify the server clock."
-                : "Could not save subscription"
-
+                : "Could not save subscription",
         });
-
     }
-
 });
 
-
-//for display data from owners database
 app.get("/show_subscriptions", (req, res) => {
-try{
-    const ownersRef = database.ref("owners");
-    ownersRef.once("value", (snapshot) => {
-        const ownersData = snapshot.val();
-        return res.json({ owners: ownersData, ownerId: ownersData ? Object.keys(ownersData)[0] : null });
-    });
-}catch (error) {
-    console.error("Error retrieving owners data:", error.message);
-}
+    try {
+        const ownersRef = database.ref("owners");
+        ownersRef.once("value", (snapshot) => {
+            const ownersData = snapshot.val();
+            return res.json({
+                owners: ownersData,
+                ownerId: ownersData ? Object.keys(ownersData)[0] : null,
+            });
+        });
+    } catch (error) {
+        console.error("Error retrieving owners data:", error.message);
+    }
 });
-// this is for count the sales products beacause i want the number of the each product
+
 app.get("/product_name", (req, res) => {
-try{
-    const ownersRef = database.ref("submit");
-    ownersRef.once("value", (snapshot) => {
-        const productName = snapshot.val();
-        return res.json({ productname: productName});
-    });
-}catch (error) {
-    console.error("Error retrieving owners data:", error.message);
-}
+    try {
+        const ownersRef = database.ref("submit");
+        ownersRef.once("value", (snapshot) => {
+            const productName = snapshot.val();
+            return res.json({ productname: productName });
+        });
+    } catch (error) {
+        console.error("Error retrieving owners data:", error.message);
+    }
 });
-//this is for active customers
+
 app.get("/active_data", (req, res) => {
-try{
-    const ownersRef = database.ref("submit");
-    ownersRef.once("value", (snapshot) => {
-        const ownersData = snapshot.val();
-        return res.json({ activedata: ownersData, ownerId: ownersData ? Object.keys(ownersData)[0] : null });
-    });
-}catch (error) {
-    console.error("Error retrieving active data:", error.message);
-}
+    try {
+        const ownersRef = database.ref("submit");
+        ownersRef.once("value", (snapshot) => {
+            const ownersData = snapshot.val();
+            return res.json({
+                activedata: ownersData,
+                ownerId: ownersData ? Object.keys(ownersData)[0] : null,
+            });
+        });
+    } catch (error) {
+        console.error("Error retrieving active data:", error.message);
+    }
 });
 
 app.get("/all_products", (req, res) => {
-try{
-    const ownersRef = database.ref("user");
-    ownersRef.once("value", (snapshot) => {
-        const productName = snapshot.val();
-        return res.json({ productname: productName});
-    });
-}catch (error) {
-    console.error("Error retrieving owners data:", error.message);
-}
+    try {
+        const ownersRef = database.ref("user");
+        ownersRef.once("value", (snapshot) => {
+            const productName = snapshot.val();
+            return res.json({ productname: productName });
+        });
+    } catch (error) {
+        console.error("Error retrieving owners data:", error.message);
+    }
 });
 
 app.post("/send_notification", async (req, res) => {
