@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MetricFlow · Glass Analytics</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg1:#e0e7ff;--bg2:#fce7f3;--bg3:#cffafe;--glass:rgba(255,255,255,.55);--glass2:rgba(255,255,255,.35);--bd:rgba(255,255,255,.7);--tx:#0f172a;--mut:#475569;--acc:#6366f1;--acc2:#06b6d4;--acc3:#ec4899;--grid:rgba(15,23,42,.08);--sh:0 8px 32px rgba(31,38,135,.15)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg1:#0b1020;--bg2:#1b1040;--bg3:#06232e;--glass:rgba(255,255,255,.07);--glass2:rgba(255,255,255,.04);--bd:rgba(255,255,255,.14);--tx:#f1f5f9;--mut:#94a3b8;--grid:rgba(255,255,255,.08);--sh:0 8px 32px rgba(0,0,0,.4)}}
+:root[data-theme=dark]{--bg1:#0b1020;--bg2:#1b1040;--bg3:#06232e;--glass:rgba(255,255,255,.07);--glass2:rgba(255,255,255,.04);--bd:rgba(255,255,255,.14);--tx:#f1f5f9;--mut:#94a3b8;--grid:rgba(255,255,255,.08);--sh:0 8px 32px rgba(0,0,0,.4)}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{font-family:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif;color:var(--tx);background:linear-gradient(135deg,var(--bg1),var(--bg2) 55%,var(--bg3));background-attachment:fixed;min-height:100vh;min-height:100dvh;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+body.lock{overflow:hidden}
+.blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:.55;z-index:0;pointer-events:none;animation:fl 18s ease-in-out infinite alternate;max-width:80vw;max-height:80vw}
+@keyframes fl{to{transform:translate(60px,-40px) scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.blob{animation:none}.fade{animation:none!important}html{scroll-behavior:auto}}
+.g{background:var(--glass);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid var(--bd);box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.25);border-radius:22px}
+.g2{background:var(--glass2);border:1px solid var(--bd);border-radius:14px}
+.mut{color:var(--mut)}
+.btn{border:1px solid var(--bd);background:var(--glass2);border-radius:12px;padding:.5rem .9rem;font-size:.8rem;font-weight:600;cursor:pointer;color:var(--tx);transition:background .15s;min-height:40px;touch-action:manipulation}
+.btn:hover{background:var(--glass)}
+.btn.on,.btn-p{background:linear-gradient(135deg,var(--acc),var(--acc3));color:#fff;border-color:transparent}
+.btn:focus-visible,.nav a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+input,select{background:var(--glass2);border:1px solid var(--bd);border-radius:12px;padding:.5rem .8rem;font-size:.85rem;color:var(--tx);outline:none;min-height:40px;max-width:100%}
+select option{color:#0f172a}
+.nav a{display:flex;gap:.7rem;align-items:center;padding:.65rem .85rem;min-height:44px;border-radius:12px;font-size:.88rem;color:var(--mut);font-weight:500}
+.nav a:hover,.nav a.act{background:var(--glass);color:var(--tx)}
+.nav a.act{box-shadow:inset 3px 0 0 var(--acc)}
+th{font-size:.72rem;font-weight:600;color:var(--mut);padding:.7rem 1rem;text-align:left;cursor:pointer;white-space:nowrap}
+td{padding:.75rem 1rem;font-size:.85rem;border-top:1px solid var(--grid);white-space:nowrap}
+.pill{border-radius:99px;padding:.2rem .65rem;font-size:.72rem;font-weight:600;white-space:nowrap}
+.s-Completed{background:rgba(16,185,129,.18);color:#10b981}.s-Pending{background:rgba(245,158,11,.18);color:#f59e0b}.s-Cancelled{background:rgba(244,63,94,.18);color:#f43f5e}
+.cw{position:relative;height:clamp(200px,32vw,300px)}
+.xbtn{min-width:40px;min-height:40px;border-radius:10px}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.scrollx::-webkit-scrollbar{display:none}
+.kv{font-size:clamp(1.25rem,4.5vw,1.6rem)}
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes notifPop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media(max-width:639px){.cw{height:220px}input,select{font-size:16px}
+.g{border-radius:18px}}
+#side{transition:transform .25s;height:calc(100vh - 1.5rem);height:calc(100dvh - 1.5rem);overscroll-behavior:contain}
+@media(max-width:1023px){#side{transform:translateX(-110%);visibility:hidden;transition:transform .25s,visibility 0s .25s}#side.open{transform:none;visibility:visible;transition:transform .25s}}
+@media(max-height:480px) and (orientation:landscape){#side .mt-auto{margin-top:1rem}.cw{height:200px}}
+.modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.5);backdrop-filter:blur(6px);padding:1rem;padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))}
+.modal.open{display:flex}
+@media(max-width:639px){.modal{align-items:flex-end}}
+.fade{animation:in .5s ease both}@keyframes in{from{opacity:0;transform:translateY(10px)}}
+</style>
+</head>
+<body>
+<div class="blob" style="width:420px;height:420px;background:#6366f1;top:-100px;left:-80px"></div>
+<div class="blob" style="width:380px;height:380px;background:#ec4899;bottom:-120px;right:10%;animation-delay:-6s"></div>
+<div class="blob" style="width:320px;height:320px;background:#06b6d4;top:35%;right:-80px;animation-delay:-11s"></div>
+
+<aside id="side" class="g fixed left-3 top-3 z-40 w-64 max-w-[85vw] overflow-y-auto flex flex-col p-4" style="margin-top:env(safe-area-inset-top,0px)" aria-label="Main navigation">
+  <div class="flex items-center gap-3 px-2 py-3">
+    <div class="h-10 w-10 shrink-0 rounded-xl btn-p flex items-center justify-center"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 6-7"/></svg></div>
+    <div class="min-w-0 flex-1"><p class="font-bold text-lg leading-none">MetricFlow</p><p class="text-xs mut mt-1">Glass analytics</p></div>
+    <button class="btn xbtn lg:hidden" onclick="side(false)" aria-label="Close menu">✕</button>
+  </div>
+  <nav class="nav mt-4 space-y-1" id="nav">
+    <a href="#overview" class="act">◉ Overview</a><a href="#sales">▲ Sales analytics</a><a href="#goals">◎ Goals &amp; insights</a><a href="#transactions">▤ Transactions</a><a href="#activity">✦ Activity</a>
+  </nav>
+  <div class="g2 mt-6 p-4">
+    <p class="text-sm font-semibold">Accent colour</p>
+    <div class="flex flex-wrap gap-3 mt-3" id="swatches"></div>
+  </div>
+  <div class="mt-auto pt-6"><div class="g2 p-4">
+    <p class="text-sm font-semibold">Share your numbers</p>
+    <p class="text-xs mut mt-1">Download the current view as a CSV.</p>
+    <button class="btn btn-p w-full mt-3" onclick="exportCSV()">Export report</button>
+  </div></div>
+</aside>
+<div id="ov" class="fixed inset-0 z-30 hidden bg-black/40 lg:hidden" onclick="side(false)"></div>
+
+<main class="relative z-10 lg:pl-72 px-3 sm:px-4 pb-10 pt-3">
+ <div class="mx-auto w-full max-w-[1600px]">
+  <header class="g sticky top-3 z-20 flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4" style="top:calc(.75rem + env(safe-area-inset-top,0px))">
+    <button class="btn lg:hidden shrink-0" onclick="side(true)" aria-label="Open menu">☰</button>
+    <div class="min-w-0 flex-1"><h1 class="font-bold text-base sm:text-xl truncate">Business overview</h1><p class="text-xs mut hidden sm:block">Sunday, 18 October 2026</p></div>
+    <input id="q" placeholder="Search orders…  ( / )" class="hidden md:block w-40 lg:w-52" aria-label="Search orders">
+    <button class="btn shrink-0" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme">☾</button>
+    <div class="sm:relative shrink-0"><button class="btn" onclick="$('#notif').classList.toggle('hidden')" aria-label="Notifications">🔔<span class="ml-1 text-rose-400" id="nc">3</span></button>
+
+      <div id="notif" class="g hidden absolute left-0 right-0 top-full mt-2 w-full sm:w-72 p-3 text-sm space-y-2 rounded-xl border border-white/15 bg-[linear-gradient(555deg,blue,pink,black)] text-white shadow-2xl shadow-black/25 backdrop-blur-2xl origin-top-right animate-[notifPop_0.22s_cubic-bezier(0.16,1,0.3,1)] sm:left-auto" style="backdrop-filter:blur(30px)">
+        <p class="font-semibold text-base tracking-wide">Notifications</p>
+        <p class="g2 p-2 rounded-xl transition-colors duration-200 hover:bg-white/10">Order #ORD-1050 is above your average value.</p>
+        <p class="g2 p-2 rounded-xl transition-colors duration-200 hover:bg-white/10">Revenue goal is on track for this month.</p>
+        <p class="g2 p-2 rounded-xl transition-colors duration-200 hover:bg-white/10">Portable charger stock is running low.</p>
+        <button class="btn w-full transition-all duration-200 hover:brightness-110 active:scale-[0.98]" onclick="$('#nc').textContent='0';$('#notif').classList.add('hidden');toast('All caught up')">Mark all as read</button>
+      </div>
+
+    </div>
+    <div class="hidden h-9 w-9 shrink-0 rounded-full btn-p items-center justify-center text-sm font-bold sm:flex">CK</div>
+  </header>
+
+  <div class="mt-5 space-y-4 sm:space-y-5">
+    <section id="overview" class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div><h2 class="font-bold text-lg sm:text-xl">Performance at a glance</h2><p class="text-sm mut" id="rangeLbl"></p></div>
+      <div class="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap" id="periods">
+        <button class="btn" data-p="7">7 days</button><button class="btn on" data-p="30">30 days</button><button class="btn" data-p="90">90 days</button>
+        <button class="btn btn-p col-span-3 sm:col-span-1" onclick="openModal()">＋ New order</button>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4" id="kpis"></section>
+
+    <section id="sales" class="grid gap-4 sm:gap-5 xl:grid-cols-3">
+      <article class="g p-4 sm:p-5 xl:col-span-2 min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div><h3 class="font-semibold">Revenue overview</h3><p class="text-sm mut">Compare with the previous period</p></div>
+          <div class="flex gap-2 scrollx max-w-full" id="metrics"><button class="btn on" data-m="revenue">Revenue</button><button class="btn" data-m="orders">Orders</button><button class="btn whitespace-nowrap" data-m="aov">Avg. order</button></div>
+        </div>
+        <div class="cw mt-4"><canvas id="rev" aria-label="Revenue chart"></canvas></div>
+      </article>
+      <article class="g p-4 sm:p-5 min-w-0">
+        <h3 class="font-semibold">Sales by channel</h3><p class="text-sm mut">Tap a legend row to hide a channel</p>
+        <div class="mx-auto mt-3 h-44 sm:h-48 max-w-[220px]"><canvas id="ch" aria-label="Channel chart"></canvas></div>
+        <div id="chLeg" class="mt-4 space-y-1"></div>
+      </article>
+    </section>
+
+    <section id="goals" class="grid gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <article class="g p-4 sm:p-5">
+        <h3 class="font-semibold">Monthly goal</h3><p class="text-sm mut">Target: $60,000</p>
+        <div class="relative mx-auto mt-4 h-36 w-36 sm:h-40 sm:w-40">
+          <svg viewBox="0 0 120 120" class="h-full w-full -rotate-90"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--grid)" stroke-width="12"/><circle id="ring" cx="60" cy="60" r="50" fill="none" stroke="url(#gr)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1.2s ease"/><defs><linearGradient id="gr"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs></svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center"><p class="text-3xl font-bold" id="ringPct">0%</p><p class="text-xs mut">reached</p></div>
+        </div>
+        <p class="text-center text-sm mut mt-3" id="ringTxt"></p>
+      </article>
+      <article class="g p-4 sm:p-5 min-w-0">
+        <h3 class="font-semibold">Revenue by region</h3><p class="text-sm mut">Share of total for this period</p>
+        <div class="cw mt-3" style="height:230px"><canvas id="reg" aria-label="Region chart"></canvas></div>
+      </article>
+      <article class="g p-4 sm:p-5 md:col-span-2 xl:col-span-1">
+        <h3 class="font-semibold">Smart insights</h3><p class="text-sm mut">Generated from the current view</p>
+        <div id="ins" class="mt-4 space-y-3 text-sm md:grid md:grid-cols-2 md:gap-3 md:space-y-0 xl:block xl:space-y-3"></div>
+      </article>
+    </section>
+
+    <section class="grid gap-4 sm:gap-5 xl:grid-cols-3">
+      <article id="transactions" class="g xl:col-span-2 overflow-hidden min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+          <div><h3 class="font-semibold">Employ Information</h3><p class="text-sm mut" id="txCount"></p></div>
+          <div class="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+            <input id="q2" placeholder="Search…" class="min-w-0 flex-1 sm:w-36 sm:flex-none md:hidden" aria-label="Search orders">
+          </div>
+        </div>
+            <div class="mt-3 space-y-2 text-sm max-h-48 overflow-auto">
+              <div id="rows" class="mt-3 space-y-2 text-sm max-h-48 overflow-auto"></div>
+            <div id="employ_number" class="flex justify-center items-center px-6 py-4 text-xl font-bold text-gray-200 tracking-tight"></div>
+        </div>
+      </article>
+      <article id="activity" class="g p-4 sm:p-5 min-w-0">
+        <div class="flex items-center justify-between"><div><h3 class="font-semibold">Top products</h3><p class="text-sm mut">Best sellers this month</p></div></div>
+        <div id="prods" class="mt-4 space-y-4"></div>
+        <h3 class="font-semibold mt-6">Live activity</h3>
+        <div id="feed" class="mt-3 space-y-2 text-sm max-h-48 overflow-auto"></div>
+      </article>
+    </section>
+    <p class="text-xs mut text-center pt-2">© 2026 MetricFlow · Demo data, generated in your browser</p>
+  </div>
+ </div>
+</main>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="g p-5 sm:p-6 w-full max-w-md max-h-full overflow-y-auto space-y-3" style="backdrop-filter:blur(30px)" role="dialog" aria-label="New order">
+    <h3 class="font-bold text-lg">New order</h3>
+    <input id="name" class="w-full" placeholder="Customer name" aria-label="Customer name" autocomplete="off">
+    <div id="m1" class="text-lg text-red-500"></div>
+    <input id="mobile" class="w-full" type="number" inputmode="decimal" min="1" placeholder="Enter mobile" aria-label="Amount">
+    <div id="m2" class="text-lg text-red-500"></div>
+    <input id="email" class="w-full" type="email" inputmode="decimal" min="1" placeholder="Enter the email" aria-label="Amount">
+    <div id="m3" class="text-lg text-red-500"></div>
+    <div id="success" class="text-lg text-green-500"></div>
+    <div class="flex justify-end gap-2 pt-2"><button class="btn" onclick="closeModal()">Cancel</button><button id="savebtn" class="btn btn-p">Save order</button></div>
+  </div>
+</div>
+<div id="toast" class="fixed left-3 right-3 z-50 hidden g px-4 py-3 text-center text-sm font-medium sm:left-auto sm:right-5 sm:max-w-sm sm:text-left" style="bottom:calc(1.25rem + env(safe-area-inset-bottom,0px))" role="status"></div>
+
+<script>
+
+function top_best_sales(orders, products) {
+    const productDetails = new Map(
+        products
+            .filter(product => typeof product?.b === "string")
+            .map(product => [product.b.trim().toLowerCase(), product])
+    );
+    const sales = new Map();
+
+    orders.forEach(order => {
+        if (typeof order?.e !== "string" || !order.e.trim()) return;
+
+        const name = order.e.trim();
+        const key = name.toLowerCase();
+        const quantity = Number(order.qty);
+        const sold = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+        const current = sales.get(key);
+        sales.set(key, {
+            name: current?.name || name,
+            count: (current?.count || 0) + sold
+        });
+    });
+
+    return [...sales.values()]
+        .map(product => ({
+            ...product,
+            productimage: productDetails.get(product.name.toLowerCase())?.a || ""
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4);
+}
+
+Promise.all([
+    fetch("/product_name").then(res => {
+        if (!res.ok) throw new Error("Failed to fetch product sales");
+        return res.json();
+    }),
+    fetch("/all_products").then(res => {
+        if (!res.ok) throw new Error("Failed to fetch product details");
+        return res.json();
+    })
+])
+.then(([salesData, productsData]) => {
+    const orders = Object.values(salesData.productname || {});
+    const products = Object.values(productsData.productname || {});
+    const topProducts = top_best_sales(orders, products);
+    const prods = document.getElementById("prods");
+    if (!prods) return;
+
+    prods.replaceChildren();
+    if (topProducts.length === 0) {
+        const emptyMessage = document.createElement("p");
+        emptyMessage.className = "text-sm mut";
+        emptyMessage.textContent = "No product sales found.";
+        prods.appendChild(emptyMessage);
+        return;
+    }
+
+    const maxCount = topProducts[0].count;
+    topProducts.forEach((product, index) => {
+        const percentage = Math.round((product.count / maxCount) * 100);
+        const row = document.createElement("div");
+        row.className = "flex items-center gap-3 mb-4";
+
+        const imageBox = document.createElement("div");
+        imageBox.className = "g2 h-11 w-11 shrink-0 flex items-center justify-center overflow-hidden rounded";
+        if (product.productimage) {
+            const image = document.createElement("img");
+            image.src = product.productimage;
+            image.alt = product.name;
+            image.className = "h-full w-full object-cover";
+            image.addEventListener("error", () => {
+                imageBox.textContent = "📦";
+            }, { once: true });
+            imageBox.appendChild(image);
+        } else {
+            imageBox.textContent = "📦";
+        }
+
+        const details = document.createElement("div");
+        details.className = "min-w-0 flex-1";
+
+        const titleRow = document.createElement("div");
+        titleRow.className = "flex items-center gap-2";
+        const rank = document.createElement("span");
+        rank.className = "text-xs mut";
+        rank.textContent = `#${index + 1}`;
+        const name = document.createElement("p");
+        name.className = "text-sm font-semibold truncate";
+        name.textContent = product.name;
+        titleRow.append(rank, name);
+
+        const countRow = document.createElement("div");
+        countRow.className = "flex justify-between mt-1";
+        const sold = document.createElement("p");
+        sold.className = "text-xs mut";
+        sold.textContent = `${product.count} sold`;
+        const share = document.createElement("p");
+        share.className = "text-xs font-semibold";
+        share.textContent = `${percentage}%`;
+        countRow.append(sold, share);
+
+        const bar = document.createElement("div");
+        bar.className = "mt-1.5 h-1.5 w-full rounded-full overflow-hidden";
+        bar.style.background = "var(--grid)";
+        const fill = document.createElement("div");
+        fill.className = "h-full rounded-full btn-p transition-all duration-500";
+        fill.style.width = `${percentage}%`;
+        bar.appendChild(fill);
+        details.append(titleRow, countRow, bar);
+
+        const total = document.createElement("b");
+        total.className = "text-sm";
+        total.textContent = String(product.count);
+        row.append(imageBox, details, total);
+        prods.appendChild(row);
+    });
+})
+.catch(error => {
+    console.error("Unable to load best-selling products:", error);
+
+    const prods = document.getElementById("prods");
+    if (prods) {
+        const errorMessage = document.createElement("p");
+        errorMessage.className = "text-sm text-red-400";
+        errorMessage.textContent = "Unable to load best-selling products.";
+        prods.replaceChildren(errorMessage);
+    }
+});
+
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const S={p:30,m:'revenue',fs:'all',q:'',k:'date',d:-1,pg:1,per:6};
+const PAL={Indigo:['#6366f1','#ec4899'],Ocean:['#0ea5e9','#14b8a6'],Sunset:['#f97316','#e11d48'],Forest:['#10b981','#84cc16']};
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],END=new Date(2026,9,18);
+const small=()=>innerWidth<640;
+function dstr(o){const d=new Date(END);d.setDate(d.getDate()-o);return MON[d.getMonth()]+' '+d.getDate()}
+function gen(n,seed){const r=rng(seed),rev=[],ord=[];for(let i=0;i<n;i++){const t=1+i/n*.45,w=1+.12*Math.sin(i*.9);const v=Math.round(1600*t*w*(.85+r()*.3));rev.push(v);ord.push(Math.round(v/37.6*(.9+r()*.2)))}return{rev,ord}}
+const sum=a=>a.reduce((x,y)=>x+y,0),fmt=n=>n.toLocaleString('en-US'),usd=n=>'$'+fmt(Math.round(n));
+let cur,prev,rc,cc,gc,load=()=>{try{return JSON.parse(localStorage.getItem('mf_orders'))}catch(e){return null}};
+let orders=load()||[['Ava Mitchell',420,'Completed',0],['James Lee',185.5,'Pending',0],['Sophia Patel',760,'Completed',1],['Noah Brooks',92,'Cancelled',2],['Liam Chen',315,'Completed',2],['Mia Rossi',540,'Completed',3],['Ethan Park',128,'Pending',4],['Zara Khan',905,'Completed',5],['Lucas Meyer',67,'Cancelled',6],['Isla Novak',233,'Completed',7]].map((o,i)=>({name:o[0],amt:o[1],status:o[2],id:'#ORD-'+(1049-i),date:new Date(END.getTime()-o[3]*864e5).getTime()}));
+function save(){try{localStorage.setItem('mf_orders',JSON.stringify(orders))}catch(e){}}
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.remove('hidden');clearTimeout(window.tt);window.tt=setTimeout(()=>t.classList.add('hidden'),2600)}
+function side(o){$('#side').classList.toggle('open',o);$('#ov').classList.toggle('hidden',!o);document.body.classList.toggle('lock',o)}
+function spark(a,c){const mx=Math.max(...a),mn=Math.min(...a),s=a.length>24?Math.ceil(a.length/24):1,b=a.filter((_,i)=>i%s===0);const pts=b.map((v,i)=>(i/(b.length-1)*100).toFixed(1)+','+(28-(v-mn)/(mx-mn||1)*26).toFixed(1)).join(' ');return`<svg viewBox="0 0 100 30" class="w-full h-8 mt-3" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`}
+function count(el,to,f){const t0=performance.now();(function s(t){const p=Math.min(1,(t-t0)/700);el.textContent=f(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(s)})(t0)}
+function kpis(){
+  const cs=n=>Math.round(n*.28),k=[
+   ['Total revenue',sum(cur.rev),sum(prev.rev),usd,cur.rev,'#6366f1'],
+   ['Total orders',sum(cur.ord),sum(prev.ord),fmt,cur.ord,'#06b6d4'],
+   ['New customers',cs(sum(cur.ord)),cs(sum(prev.ord))*1.02,fmt,cur.ord.map(cs),'#ec4899'],
+   ['Conversion rate',3.64,3.7,n=>n.toFixed(2)+'%',cur.ord.map(v=>v+Math.sin(v)*5),'#f59e0b']];
+  $('#kpis').innerHTML=k.map((x,i)=>{const d=(x[1]/x[2]-1)*100,up=d>=0;return`<article class="g p-3.5 sm:p-5 fade min-w-0" style="animation-delay:${i*70}ms"><p class="text-xs sm:text-sm mut font-medium truncate">${x[0]}</p><div class="flex flex-wrap items-end justify-between gap-1 mt-1"><p class="kv font-bold">0</p><span class="pill ${up?'s-Completed':'s-Cancelled'}">${up?'▲':'▼'} ${Math.abs(d).toFixed(1)}%</span></div>${spark(x[4],x[5])}</article>`}).join('');
+  $$('.kv').forEach((el,i)=>count(el,k[i][1],k[i][3]));
+}
+function series(){const m=S.m,f=m==='aov'?(d=>d.rev.map((v,i)=>+(v/d.ord[i]).toFixed(1))):(d=>m==='revenue'?d.rev:d.ord);return[f(cur),f(prev)]}
+function drawRev(){
+  const[a,b]=series(),lb=cur.rev.map((_,i)=>dstr(S.p-1-i)),ac=css('--acc'),ctx=$('#rev').getContext('2d'),gr=ctx.createLinearGradient(0,0,0,280);gr.addColorStop(0,ac+'66');gr.addColorStop(1,ac+'00');
+  if(rc)rc.destroy();
+  rc=new Chart(ctx,{type:'line',data:{labels:lb,datasets:[{label:'This period',data:a,borderColor:ac,backgroundColor:gr,fill:true,tension:.4,borderWidth:2.5,pointRadius:0,pointHoverRadius:5},{label:'Previous period',data:b,borderColor:css('--mut'),borderDash:[5,5],tension:.4,borderWidth:1.5,pointRadius:0}]},
+   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:css('--mut'),usePointStyle:true,boxWidth:8,font:{size:small()?10:12}}},tooltip:{backgroundColor:'rgba(15,23,42,.92)',padding:10,cornerRadius:10}},scales:{x:{grid:{display:false},ticks:{color:css('--mut'),maxTicksLimit:small()?4:7,maxRotation:0,font:{size:small()?10:12}}},y:{beginAtZero:true,grid:{color:css('--grid')},border:{display:false},ticks:{color:css('--mut'),maxTicksLimit:small()?5:8,font:{size:small()?10:12},callback:v=>S.m==='orders'?v:'$'+(v>=1000?(v/1000)+'k':v)}}}}});
+}
+const CH=[['Website',48,'#6366f1'],['Marketplace',32,'#06b6d4'],['Social media',20,'#ec4899']];
+function drawCh(){
+  if(cc)cc.destroy();
+  cc=new Chart($('#ch'),{type:'doughnut',data:{labels:CH.map(c=>c[0]),datasets:[{data:CH.map(c=>c[1]),backgroundColor:CH.map(c=>c[2]),borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false}}}});
+  $('#chLeg').innerHTML=CH.map((c,i)=>`<button class="flex w-full items-center justify-between text-sm py-2 min-h-[40px]" onclick="cc.toggleDataVisibility(${i});cc.update();this.style.opacity=cc.getDataVisibility(${i})?1:.4"><span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background:${c[2]}"></span>${c[0]}</span><b>${c[1]}%</b></button>`).join('');
+}
+const REG=[['North America',.36],['Europe',.29],['Asia Pacific',.22],['Latin America',.08],['Africa',.05]];
+function drawReg(){
+  const t=sum(cur.rev);if(gc)gc.destroy();
+  gc=new Chart($('#reg'),{type:'bar',data:{labels:REG.map(r=>r[0]),datasets:[{data:REG.map(r=>Math.round(t*r[1])),backgroundColor:['#6366f1','#06b6d4','#ec4899','#f59e0b','#10b981'],borderRadius:8}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>usd(c.raw)}}},scales:{x:{grid:{color:css('--grid')},ticks:{color:css('--mut'),maxTicksLimit:small()?4:8,font:{size:small()?10:12},callback:v=>'$'+v/1000+'k'}},y:{grid:{display:false},ticks:{color:css('--mut'),font:{size:small()?10:12}}}}}});
+}
+function goals(){
+  const mt=Math.round(sum(gen(18,7).rev)*1.05),pct=Math.min(100,Math.round(mt/60000*100));
+  setTimeout(()=>{$('#ring').style.strokeDashoffset=314*(1-pct/100)},50);$('#ringPct').textContent=pct+'%';$('#ringTxt').textContent=usd(mt)+' of $60,000 · '+(pct>=70?'on track':'needs a push');
+  const rv=sum(cur.rev),pv=sum(prev.rev),peak=cur.rev.indexOf(Math.max(...cur.rev));
+  $('#ins').innerHTML=[['📈',`Revenue is ${rv>=pv?'up':'down'} ${Math.abs((rv/pv-1)*100).toFixed(1)}% against the previous ${S.p} days.`],['🏆',`Best day was ${dstr(S.p-1-peak)} with ${usd(cur.rev[peak])}.`],['💡',`Average order value is ${usd(rv/sum(cur.ord))}. Bundles could lift it.`],['⚠️','Social media converts 18% below Website. Review ad targeting.']].map(i=>`<div class="g2 p-3 flex gap-3"><span>${i[0]}</span><span class="min-w-0">${i[1]}</span></div>`).join('');
+}
+
+function rows(){
+ const rows=document.getElementById("rows");
+fetch("/show_subscriptions")
+    .then((res) => res.json())
+    .then((data) => {
+      const owners = Object.values(data.owners || {});
+      if (!owners.length){
+        document.getElementById("employ_number").innerHTML="No member added yet";
+      }
+      document.getElementById("employ_number").innerHTML="";
+      owners.forEach((owner) =>{
+        rows.innerHTML+=`<div class="group my-2 cursor-pointer rounded  border border-white/10 bg-white/5 p-3 shadow-lg backdrop-blur-md transition-all duration-300 ease-out hover:border-white/20 hover:bg-white/10 hover:shadow-xl active:scale-[0.98]">
+        <div class="flex items-center justify-between gap-3">
+          <p class="min-w-0 truncate font-semibold text-white">${owner.name}</p>
+          <p class="min-w-0 truncate font-semibold text-white">${owner.mobile}</p>
+          <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"></span>${badge(!!owner.notificationSubscription)}</span>
+        </div>
+        </div>
+      </div>`;
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+
+
+const badge = (on) => {
+  return `
+    <span ${
+      on
+        ? "bg-green-100 text-green-700"
+        : "bg-slate-100 text-slate-600"
+    }">
+      ${on ? "Enabled" : "Not enabled"}
+    </span>
+  `;
+};
+
+function openModal(){$('#modal').classList.add('open');}
+function closeModal(){$('#modal').classList.remove('open')}
+
+  async function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) throw new Error("Service workers are not supported in this browser.");
+    const reg = await navigator.serviceWorker.register("/service-worker.js");
+    await navigator.serviceWorker.ready;
+    return reg;
+  }
+  function urlBase64ToUint8Array(b64) {
+    const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+    const raw = window.atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  }
+  const postJSON = async (body) => {
+    const res = await fetch("/subscribe", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || "Request failed");
+    return data;
+  };
+  const btn = document.getElementById("savebtn");
+  const subscribeBtn =document.getElementById("savebtn");
+  btn.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const nameInput = document.getElementById("name");
+    const mobileInput = document.getElementById("mobile");
+    const emailInput = document.getElementById("email");
+    
+    const nameValue = nameInput.value.trim();
+    const mobileValue = mobileInput.value.trim();
+    const emailValue = emailInput.value.trim();
+
+    document.getElementById("m1").innerHTML="";
+    document.getElementById("m2").innerHTML="";
+    document.getElementById("m3").innerHTML="";
+    
+    if(!nameValue){
+      document.getElementById("m1").innerHTML="Please enter name";
+      nameInput.focus;
+      return;
+    }
+    if(!mobileValue){
+      document.getElementById("m2").innerHTML="Please enter mobile no...";
+      mobileInput.focus;
+      return;
+    }
+    if(!emailValue){
+      document.getElementById("m3").innerHTML="Please enter your email";
+      emailInput.focus;
+      return;
+    }
+
+    const ownerId = emailValue.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const ownerData = { ownerId, name: nameValue, mobile: mobileValue, email: emailValue };
+    subscribeBtn.disabled = true;
+    subscribeBtn.textContent = "Creating account...";
+
+    try {
+      await postJSON(ownerData);
+      let message = "Account created.";
+      try {
+        if (!window.isSecureContext || !("serviceWorker" in navigator) || !("PushManager" in window))
+          throw new Error("Push notifications require HTTPS or localhost.");
+        if ((await Notification.requestPermission()) !== "granted")
+          throw new Error("Notification permission denied.");
+
+        const registration = await registerServiceWorker();
+        const publicKey = "BFKtDIwBjMBUdIoEP5mgv14ak4M3DUSvmRbwLpapdCRorgUS7yx8DVUTxA0_iSVOcEQf_xQjljc3mgYTkuqPuRI";
+        const existing = await registration.pushManager.getSubscription();
+        if (existing) await existing.unsubscribe();
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        await postJSON({ ...ownerData, subscription: subscription.toJSON() });
+        message = "Account created and notifications enabled!";
+      } catch (err) {
+        console.error(err);
+        message = `Account created, but notifications could not be enabled: ${err.message}`;
+      }
+      document.getElementById('success').innerHTML='Member added successfully'
+      alert(message);
+    } catch (err) {
+      console.error(err);
+      alert(`Could not create account: ${err.message}`);
+    } finally {
+      subscribeBtn.disabled = false;
+      subscribeBtn.textContent = "Create an account";
+    }
+  });
+
+
+const PR=[['🎧','Wireless headphones',245,'$8.4k',82],['⌚','Smart watch',189,'$6.2k',65],['🎒','Everyday backpack',156,'$4.7k',51],['🔋','Portable charger',122,'$3.1k',39]];
+$('#prods').innerHTML=PR.map(p=>`<div class="flex items-center gap-3"><div class="g2 h-11 w-11 shrink-0 flex items-center justify-center text-xl">${p[0]}</div><div class="min-w-0 flex-1"><p class="text-sm font-semibold truncate">${p[1]}</p><p class="text-xs mut">${p[2]} sold</p><div class="mt-1.5 h-1.5 rounded-full" style="background:var(--grid)"><div class="h-full rounded-full btn-p" style="width:${p[4]}%"></div></div></div><b class="text-sm">${p[3]}</b></div>`).join('');
+
+
+function feed(m){
+  const feed=document.getElementById("feed");
+   fetch("/active_data")
+    .then((res) => res.json())
+    .then((data) => {
+      const owners = Object.values(data.activedata || {});
+      if (!owners.length){
+        document.getElementById("employ_number").innerHTML="No member added yet";
+      }
+      document.getElementById("employ_number").innerHTML="";
+      document.getElementById("feed").innerHTML="";
+      owners.forEach((owner) =>{
+        feed.innerHTML+=`<div class="group my-2 cursor-pointer rounded-xl border border-white/10 bg-white/5 p-3 shadow-lg backdrop-blur-md transition-all duration-300 ease-out hover:border-white/20 hover:bg-white/10 hover:shadow-xl active:scale-[0.98]">
+        <div class="flex items-center justify-between gap-3">
+          <p class="min-w-0 truncate font-semibold text-white">${owner.a}<span class="ml-1 text-sm font-medium text-gray-400">[${owner.b}]</span></p>
+
+          <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-400">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"></span>Active</span>
+        </div>
+      </div>`;
+      });
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+}
+
+['Ava Mitchell paid $420.00','Portable charger stock is low','Sophia Patel opened a support ticket'].forEach(feed);
+setInterval(()=>{const n=['Maya','Omar','Chloe','Ravi','Elena'][Math.random()*5|0];feed(n+' placed an order for $'+(50+Math.random()*400).toFixed(2))},9000);
+function refresh(){cur=gen(S.p,S.p);prev=gen(S.p,S.p+99);$('#rangeLbl').textContent=dstr(S.p-1)+' – '+dstr(0)+', 2026';kpis();drawRev();drawCh();drawReg();goals()}
+function exportCSV(){const q=v=>'"'+String(v).replace(/"/g,'""')+'"',L=[['Metric','Value'],['Revenue',usd(sum(cur.rev))],['Orders',fmt(sum(cur.ord))],[],['Customer','Order','Date','Amount','Status'],...orders.map(o=>[o.name,o.id,new Date(o.date).toISOString().slice(0,10),o.amt.toFixed(2),o.status])];
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([L.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}));a.download='metricflow-report.csv';a.click();toast('Report exported as CSV')}
+function toggleTheme(){const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.dataset.theme=dark?'light':'dark';try{localStorage.setItem('mf_theme',document.documentElement.dataset.theme)}catch(e){}$('#themeBtn').textContent=dark?'☾':'☀';refresh()}
+$('#swatches').innerHTML=Object.entries(PAL).map(([n,c])=>`<button aria-label="${n} accent" title="${n}" class="h-9 w-9 rounded-full border border-white/50" style="background:linear-gradient(135deg,${c[0]},${c[1]})" onclick="accent('${n}')"></button>`).join('');
+function accent(n){const c=PAL[n];const r=document.documentElement.style;r.setProperty('--acc',c[0]);r.setProperty('--acc3',c[1]);try{localStorage.setItem('mf_acc',n)}catch(e){}refresh()}
+$('#periods').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;S.p=+b.dataset.p;$$('#periods [data-p]').forEach(x=>x.classList.toggle('on',x===b));refresh()});
+$('#metrics').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;S.m=b.dataset.m;$$('#metrics .btn').forEach(x=>x.classList.toggle('on',x===b));drawRev()});
+['#q','#q2'].forEach(s=>$(s).addEventListener('input',e=>{S.q=e.target.value.toLowerCase().trim();S.pg=1;rows()}));
+$$('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;S.d=S.k===k?-S.d:1;S.k=k;rows()});
+$$('#nav a').forEach(a=>a.onclick=()=>{$$('#nav a').forEach(x=>x.classList.remove('act'));a.classList.add('act');side(false)});
+addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}if(e.key==='Escape'){closeModal();side(false);$('#notif').classList.add('hidden')}});
+/* responsive behaviour */
+document.addEventListener('click',e=>{if(!e.target.closest('#notif')&&!e.target.closest('[aria-label=Notifications]'))$('#notif').classList.add('hidden')});
+let tx=null;const sd=$('#side');
+sd.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+sd.addEventListener('touchend',e=>{if(tx!==null&&tx-e.changedTouches[0].clientX>60)side(false);tx=null},{passive:true});
+let wasSmall=small(),rt;
+addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth>=1024)side(false);const s=small();if(s!==wasSmall){wasSmall=s;drawRev();drawReg()}},150)});
+try{const t=localStorage.getItem('mf_theme');if(t){document.documentElement.dataset.theme=t;$('#themeBtn').textContent=t==='dark'?'☀':'☾'}const a=localStorage.getItem('mf_acc');if(a&&PAL[a]){document.documentElement.style.setProperty('--acc',PAL[a][0]);document.documentElement.style.setProperty('--acc3',PAL[a][1])}}catch(e){}
+refresh();rows();
+</script>
+</body>
+</html>
