@@ -1,7 +1,4 @@
 .env
 node_modules/
 firebase-service-account.json
-.env
-node_modules/
-firebase-service-account.json
 firebase-service-account.json.json
