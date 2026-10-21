@@ -1065,7 +1065,7 @@ function openDetail(key) {
       </div>
       <div>
         <div class="detail-name">${escHtml(u.a || '—')}</div>
-        <div class="detail-sub">${escHtml(u.b || '')}${u.c1 ? ' · ' + Number(u.c1).toFixed(4) + ', ' + Number(u.c2).toFixed(4) : ''}</div>
+        <div class="detail-sub">${new Date(u.ts).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',timeStyle:'medium',dateStyle:'medium'})}</div>
       </div>
       <button class="detail-close" onclick="closeDetail()">✕</button>
     </div>
