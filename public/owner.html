@@ -341,10 +341,36 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const S={p:30,m:'revenue',fs:'all',q:'',k:'date',d:-1,pg:1,per:6};
 const PAL={Indigo:['#6366f1','#ec4899'],Ocean:['#0ea5e9','#14b8a6'],Sunset:['#f97316','#e11d48'],Forest:['#10b981','#84cc16']};
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],END=new Date(2026,9,18);
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],END=new Date();END.setHours(0,0,0,0);
 const small=()=>innerWidth<640;
 function dstr(o){const d=new Date(END);d.setDate(d.getDate()-o);return MON[d.getMonth()]+' '+d.getDate()}
-function gen(n,seed){const r=rng(seed),rev=[],ord=[];for(let i=0;i<n;i++){const t=1+i/n*.45,w=1+.12*Math.sin(i*.9);const v=Math.round(1600*t*w*(.85+r()*.3));rev.push(v);ord.push(Math.round(v/37.6*(.9+r()*.2)))}return{rev,ord}}
+
+let RAW=[];
+const tsOf=o=>{
+  const t=(o?.ts);
+  return t?(t<1e12?t*1000:t):NaN;
+};
+const amountOf=o=>{
+  const q=Number(Number(o.qty)>0?Number(o.qty):1);
+  const a=Number(o.amts??o.total??o.amount);
+  const p=Number(o.price);
+  return Number.isFinite(a)?a:Number.isFinit(p)?p*q:0;
+};
+function gen(n,off){
+  const rev=Array(n).fill(0),ord=Array(n).fill(0);
+  RAW.forEach(o=>{
+  const t=tsOf(o);
+  if(!Number.isFinite(t)) return;
+  const d = new Date(t);
+  d.setHours(0,0,0,0);
+  const age = Math.round((END-d)/864e5) -off;
+  if(age<0||age>=n) return;
+  rev[n-1-age]+=amountOf(o);
+  ord[n-1-age]+=1;
+  });
+  return{rev,ord}
+  }
+
 const sum=a=>a.reduce((x,y)=>x+y,0),fmt=n=>n.toLocaleString('en-US'),usd=n=>'$'+fmt(Math.round(n));
 let cur,prev,rc,cc,gc,load=()=>{try{return JSON.parse(localStorage.getItem('mf_orders'))}catch(e){return null}};
 let orders=load()||[['Ava Mitchell',420,'Completed',0],['James Lee',185.5,'Pending',0],['Sophia Patel',760,'Completed',1],['Noah Brooks',92,'Cancelled',2],['Liam Chen',315,'Completed',2],['Mia Rossi',540,'Completed',3],['Ethan Park',128,'Pending',4],['Zara Khan',905,'Completed',5],['Lucas Meyer',67,'Cancelled',6],['Isla Novak',233,'Completed',7]].map((o,i)=>({name:o[0],amt:o[1],status:o[2],id:'#ORD-'+(1049-i),date:new Date(END.getTime()-o[3]*864e5).getTime()}));
@@ -381,11 +407,14 @@ function drawReg(){
   const t=sum(cur.rev);if(gc)gc.destroy();
   gc=new Chart($('#reg'),{type:'bar',data:{labels:REG.map(r=>r[0]),datasets:[{data:REG.map(r=>Math.round(t*r[1])),backgroundColor:['#6366f1','#06b6d4','#ec4899','#f59e0b','#10b981'],borderRadius:8}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>usd(c.raw)}}},scales:{x:{grid:{color:css('--grid')},ticks:{color:css('--mut'),maxTicksLimit:small()?4:8,font:{size:small()?10:12},callback:v=>'$'+v/1000+'k'}},y:{grid:{display:false},ticks:{color:css('--mut'),font:{size:small()?10:12}}}}}});
 }
+/* ---------- Goals & insights ---------- */
 function goals(){
-  const mt=Math.round(sum(gen(18,7).rev)*1.05),pct=Math.min(100,Math.round(mt/60000*100));
-  setTimeout(()=>{$('#ring').style.strokeDashoffset=314*(1-pct/100)},50);$('#ringPct').textContent=pct+'%';$('#ringTxt').textContent=usd(mt)+' of $60,000 · '+(pct>=70?'on track':'needs a push');
-  const rv=sum(cur.rev),pv=sum(prev.rev),peak=cur.rev.indexOf(Math.max(...cur.rev));
-  $('#ins').innerHTML=[['📈',`Revenue is ${rv>=pv?'up':'down'} ${Math.abs((rv/pv-1)*100).toFixed(1)}% against the previous ${S.p} days.`],['🏆',`Best day was ${dstr(S.p-1-peak)} with ${usd(cur.rev[peak])}.`],['💡',`Average order value is ${usd(rv/sum(cur.ord))}. Bundles could lift it.`],['⚠️','Social media converts 18% below Website. Review ad targeting.']].map(i=>`<div class="g2 p-3 flex gap-3"><span>${i[0]}</span><span class="min-w-0">${i[1]}</span></div>`).join('');
+  const now=new Date(),mt=RAW.reduce((a,o)=>{const t=tsOf(o);if(!Number.isFinite(t))return a;const d=new Date(t);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()?a+amountOf(o):a},0),
+  pct=Math.min(100,Math.round(mt/60000*100));
+  setTimeout(()=>{$('#ring').style.strokeDashoffset=314*(1-pct/100)},50);
+  $('#ringPct').textContent=pct+'%';$('#ringTxt').textContent=usd(mt)+' of $60,000 · '+(pct>=70?'on track':'needs a push');
+  const rv=sum(cur.rev),pv=sum(prev.rev),no=sum(cur.ord),peak=cur.rev.indexOf(Math.max(...cur.rev));
+  $('#ins').innerHTML=[['📈',pv?`Revenue is ${rv>=pv?'up':'down'} ${Math.abs((rv/pv-1)*100).toFixed(1)}% against the previous ${S.p} days.`:`Revenue this period is ${usd(rv)}; no previous-period data to compare.`],['🏆',rv?`Best day was ${dstr(S.p-1-peak)} with ${usd(cur.rev[peak])}.`:'No sales in this period yet.'],['💡',no?`Average order value is ${usd(rv/no)}. Bundles could lift it.`:'No orders in this period yet.'],['⚠️','Social media converts 18% below Website. Review ad targeting.']].map(i=>`<div class="g2 p-3 flex gap-3"><span>${i[0]}</span><span class="min-w-0">${i[1]}</span></div>`).join('');
 }
 
 function rows(){
@@ -556,7 +585,26 @@ function feed(m){
 
 ['Ava Mitchell paid $420.00','Portable charger stock is low','Sophia Patel opened a support ticket'].forEach(feed);
 setInterval(()=>{const n=['Maya','Omar','Chloe','Ravi','Elena'][Math.random()*5|0];feed(n+' placed an order for $'+(50+Math.random()*400).toFixed(2))},9000);
-function refresh(){cur=gen(S.p,S.p);prev=gen(S.p,S.p+99);$('#rangeLbl').textContent=dstr(S.p-1)+' – '+dstr(0)+', 2026';kpis();drawRev();drawCh();drawReg();goals()}
+
+function loaddata(){
+  fetch('/product_name').then(res=>{
+    if(!res.ok) throw new Error(res.status);
+    return res.json();
+  }).then(data=>{
+    RAW=Object.values(data.productname||{});
+    refresh();
+  }).catch(err=>{
+    console.error("something is wrong",err);
+    RAW=[];
+    refresh();
+  });
+}
+
+function refresh(){
+  cur=gen(S.p,0);
+  prev=gen(S.p,S.p);
+  $('#rangeLbl').textContent=dstr(S.p-1)+' – '+dstr(0)+', 2026';
+  kpis();drawRev();drawCh();drawReg();goals()}
 function exportCSV(){const q=v=>'"'+String(v).replace(/"/g,'""')+'"',L=[['Metric','Value'],['Revenue',usd(sum(cur.rev))],['Orders',fmt(sum(cur.ord))],[],['Customer','Order','Date','Amount','Status'],...orders.map(o=>[o.name,o.id,new Date(o.date).toISOString().slice(0,10),o.amt.toFixed(2),o.status])];
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([L.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}));a.download='metricflow-report.csv';a.click();toast('Report exported as CSV')}
 function toggleTheme(){const dark=document.documentElement.dataset.theme?document.documentElement.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.dataset.theme=dark?'light':'dark';try{localStorage.setItem('mf_theme',document.documentElement.dataset.theme)}catch(e){}$('#themeBtn').textContent=dark?'☾':'☀';refresh()}
@@ -576,6 +624,7 @@ sd.addEventListener('touchend',e=>{if(tx!==null&&tx-e.changedTouches[0].clientX>
 let wasSmall=small(),rt;
 addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth>=1024)side(false);const s=small();if(s!==wasSmall){wasSmall=s;drawRev();drawReg()}},150)});
 try{const t=localStorage.getItem('mf_theme');if(t){document.documentElement.dataset.theme=t;$('#themeBtn').textContent=t==='dark'?'☀':'☾'}const a=localStorage.getItem('mf_acc');if(a&&PAL[a]){document.documentElement.style.setProperty('--acc',PAL[a][0]);document.documentElement.style.setProperty('--acc3',PAL[a][1])}}catch(e){}
+loaddata();
 refresh();rows();
 </script>
 </body>
