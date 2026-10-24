@@ -251,6 +251,8 @@ Promise.all([
 ])
 .then(([salesData, productsData]) => {
     const orders = Object.values(salesData.productname || {});
+    RAW=orders;
+    refresh();
     const products = Object.values(productsData.productname || {});
     const topProducts = top_best_sales(orders, products);
     const prods = document.getElementById("prods");
@@ -335,6 +337,8 @@ Promise.all([
         errorMessage.textContent = "Unable to load best-selling products.";
         prods.replaceChildren(errorMessage);
     }
+    RAW=[];
+    refresh();
 });
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -586,19 +590,6 @@ function feed(m){
 ['Ava Mitchell paid $420.00','Portable charger stock is low','Sophia Patel opened a support ticket'].forEach(feed);
 setInterval(()=>{const n=['Maya','Omar','Chloe','Ravi','Elena'][Math.random()*5|0];feed(n+' placed an order for $'+(50+Math.random()*400).toFixed(2))},9000);
 
-function loaddata(){
-  fetch('/product_name').then(res=>{
-    if(!res.ok) throw new Error(res.status);
-    return res.json();
-  }).then(data=>{
-    RAW=Object.values(data.productname||{});
-    refresh();
-  }).catch(err=>{
-    console.error("something is wrong",err);
-    RAW=[];
-    refresh();
-  });
-}
 
 function refresh(){
   cur=gen(S.p,0);
@@ -624,8 +615,7 @@ sd.addEventListener('touchend',e=>{if(tx!==null&&tx-e.changedTouches[0].clientX>
 let wasSmall=small(),rt;
 addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth>=1024)side(false);const s=small();if(s!==wasSmall){wasSmall=s;drawRev();drawReg()}},150)});
 try{const t=localStorage.getItem('mf_theme');if(t){document.documentElement.dataset.theme=t;$('#themeBtn').textContent=t==='dark'?'☀':'☾'}const a=localStorage.getItem('mf_acc');if(a&&PAL[a]){document.documentElement.style.setProperty('--acc',PAL[a][0]);document.documentElement.style.setProperty('--acc3',PAL[a][1])}}catch(e){}
-loaddata();
-refresh();rows();
+rows();
 </script>
 </body>
 </html>
