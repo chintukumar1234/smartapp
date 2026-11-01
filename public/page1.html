@@ -70,8 +70,7 @@
 </nav>
 <br>
 <!-- GRID -->
-<div id="productContainer"
-     class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 max-w-[1400px] mx-auto px-[6%] pb-16 p-59">
+<div id="productContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 max-w-[1400px] mx-auto px-[6%] pb-16 pt-5">
   <!-- skeletons injected here, replaced by JS -->
 </div>
 
@@ -79,32 +78,14 @@
 
 <footer class="text-center py-5 text-xs text-white/45 border-t border-white/10">© 2026 FreshMart · All rights reserved</footer>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+<script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAVWLIDjsmMcH2kfqiKwQ1-jFU6d6654pY",
-  authDomain: "myproject-fdb4c.firebaseapp.com",
-  databaseURL: "https://myproject-fdb4c-default-rtdb.firebaseio.com",
-  projectId: "myproject-fdb4c",
-  storageBucket: "myproject-fdb4c.firebasestorage.app",
-  messagingSenderId: "600134367178",
-  appId: "1:600134367178:web:ea8b0daa3928c7791c8133"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 const container = document.getElementById("productContainer");
 const searchInput = document.getElementById("searchInput");
 
 let allProducts = [];
 
-function randomRating() {
-  return (3.8 + Math.random() * 1.2).toFixed(1);
-}
-
-function renderSkeletons(n = 8) {
+function renderSkeletons(n = 10) {
   container.innerHTML = "";
   for (let i = 0; i < n; i++) {
     const s = document.createElement("div");
@@ -118,6 +99,7 @@ function renderSkeletons(n = 8) {
     container.appendChild(s);
   }
 }
+renderSkeletons();
 
 function renderCards(products) {
   container.innerHTML = "";
@@ -142,8 +124,8 @@ function renderCards(products) {
         <div class="absolute inset-0 bg-gradient-to-t from-deep/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
         <div class="absolute top-2.5 left-2.5 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-[2]">
-          <button title="Add to wishlist" aria-label="add to wishlist"
-            class="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:bg-black/60 transition-colors">
+          <button type="button" title="Add to wishlist" aria-label="add to wishlist"
+            class="wish-btn w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:bg-black/60 transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
         </div>
@@ -157,9 +139,15 @@ function renderCards(products) {
         </div>
       </div>`;
 
+    const wishBtn = card.querySelector(".wish-btn");
+    wishBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      showToast(`${p.b} added to wishlist`);
+    });
+
     card.addEventListener("click", () => {
       sessionStorage.setItem("selectedProduct", JSON.stringify(p));
-      window.location.href = `final.html`;
+      window.location.href = "/final.html";
     });
 
     container.appendChild(card);
@@ -173,17 +161,30 @@ function getFiltered() {
 
 searchInput.addEventListener("input", () => renderCards(getFiltered()));
 
-renderSkeletons();
+function randomRating() {
+  return (3.8 + Math.random() * 1.2).toFixed(1);
+}
 
-onValue(ref(db, 'user'), snapshot => {
-  allProducts = [];
-  snapshot.forEach(child => {
-    const p = child.val();
-    p._rating = randomRating();
-    allProducts.push(p);
+fetch('/all_products')
+  .then((res) => {
+    if (!res.ok) throw new Error('Failed to fetch products');
+    return res.json();
+  })
+  .then((data) => {
+    const products = Object.values(data.productname || {});
+    allProducts = products
+      .filter(Boolean)
+      .map((p) => ({ ...p, _rating: randomRating() }));
+    renderCards(getFiltered());
+  })
+  .catch((err) => {
+    console.error('Error fetching products:', err);
+    container.innerHTML = `
+      <div class="col-span-full text-center py-16 px-5 text-white/45">
+        <p class="text-[15px]">Unable to load products right now.</p>
+      </div>`;
   });
-  renderCards(getFiltered());
-});
+
 
 let toastTimer;
 function showToast(msg) {
